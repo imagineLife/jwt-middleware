@@ -1,18 +1,17 @@
 const express = require("express");
 const app = express();
 const jwt = require('jsonwebtoken')
+const { 
+	checkForValidToken,
+	extendTokenExpDate,
+	expTime
+} = require('./middlewares')
 
 //would usually come from somewhere else
 let dummyKey = 'secretKeyStringHere!'
-let expTime = () => Math.floor(Date.now() / 1000) + (60 * 60)
 
 
-const extendTokenExpDate = (req,res,next) => {
-	let tokenData = jwt.verify(req.headers.token, dummyKey)
-	tokenData.exp = expTime()
-	req.headers.token = tokenData
-	next()
-}
+
 
 //an un-protected route
 app.get('/open', (req,res) => {
@@ -24,25 +23,6 @@ app.get('/open', (req,res) => {
 	REQUIRES username && password
 */
 
-
-const checkForValidToken = (req,res, next) => {
-	const { token } = req.headers
-	if(!token){
-		return res.json({'Error': 'missing token'})
-	}
-
-	try{
-		let tokenData = jwt.verify(token, dummyKey)
-		if(tokenData){
-			next()
-		}
-	}catch(e){
-		console.log('e')
-		console.log(e)
-		res.json({Error: e})
-	}
-
-}
 app.get('/token', (req,res) => {
 
 	//parse username && password from request url params
@@ -53,14 +33,19 @@ app.get('/token', (req,res) => {
 		return res.json({"Missing": "required params"})
 	}
 
+	//get data from a database or somewhere else
+	let moreDummyData = {
+		extraData: 'somethingElse',
+	  extraDataTwo: 'anotherThing'
+	}
+
 	//build the jwt
 	let token = jwt.sign({
 	  exp: expTime(),
 	  data: {
 	  	username: un,
 	  	password: pw,
-	  	extraData: 'somethingElse',
-	  	extraDataTwo: 'anotherThing'
+	  	...moreDummyData
 	  }
 	}, dummyKey);
 
