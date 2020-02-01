@@ -21,10 +21,21 @@ app.get('/open', (req,res) => {
 */
 
 
-const checkForValidToken = (req,res) => {
+const checkForValidToken = (req,res, next) => {
 	const { token } = req.headers
 	if(!token){
 		return res.json({'Error': 'missing token'})
+	}
+
+	try{
+		let tokenData = jwt.verify(token, dummyKey)
+		if(tokenData){
+			next()
+		}
+	}catch(e){
+		console.log('e')
+		console.log(e)
+		res.json({Error: e})
 	}
 
 }
