@@ -50,7 +50,7 @@ app.get('/token', (req,res) => {
 	}, dummyKey);
 
 	//return the jwt
-	//... can be appended to res header ....
+	//... can be appended to res header or other method of passing to client....
 	return res.json({'token': token})
 })
 
