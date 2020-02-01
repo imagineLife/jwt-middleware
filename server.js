@@ -4,12 +4,16 @@ const jwt = require('jsonwebtoken')
 
 //would usually come from somewhere else
 let dummyKey = 'secretKeyStringHere!'
-let expTime = Math.floor(Date.now() / 1000) + (60 * 60)
+let expTime = () => Math.floor(Date.now() / 1000) + (60 * 60)
 
 
-const refreshToken = () => {
-
+const extendTokenExpDate = (req,res,next) => {
+	let tokenData = jwt.verify(req.headers.token, dummyKey)
+	tokenData.exp = expTime()
+	req.headers.token = tokenData
+	next()
 }
+
 //an un-protected route
 app.get('/open', (req,res) => {
 	return res.json({'open': 'endpoint'})
@@ -51,7 +55,7 @@ app.get('/token', (req,res) => {
 
 	//build the jwt
 	let token = jwt.sign({
-	  exp: expTime,
+	  exp: expTime(),
 	  data: {
 	  	username: un,
 	  	password: pw,
@@ -69,9 +73,9 @@ app.get('/protected', checkForValidToken, (req,res) => {
 	res.json({'passed': 'Checked for token && passed!'})
 })
 
-// app.get('/protectedWithRefresh', refreshToken(checkForValidToken), (req,res) => {
-// 	res.json({'passed': 'Checked for token && passed!'})
-// })
+app.get('/protectedWithRefresh',checkForValidToken, extendTokenExpDate, (req,res) => {
+	res.json({'passed': 'Checked for token, && extended token!'})
+})
 
 let listenPort = process.env.PORT || 1234
 app.listen(listenPort, () => {
